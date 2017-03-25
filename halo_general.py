@@ -571,8 +571,8 @@ class HaloGeneral(object):
     #
     ###
 
-    def get_last_scan_results(self, server_id, scan_type):
-        scan_results = self.scan_obj.last_scan_results(server_id, scan_type)
+    def get_last_scan_results(self, scan_obj, server_id, scan_type):
+        scan_results = scan_obj.last_scan_results(server_id, scan_type)
 
         return scan_results
 
