@@ -779,7 +779,7 @@ class HaloGeneral(object):
                 or response[STATUS] == STARTED:
             print 'Command status is %s... waiting for next heartbeat...' \
                   % response[STATUS]
-            response = self.check_api_call_status(self.server_obj, server_id,
+            response = self.check_api_call_status(server_obj, server_id,
                                                   command_id)
 
         if response[STATUS] == FAILED:
