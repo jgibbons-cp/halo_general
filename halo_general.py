@@ -771,7 +771,7 @@ class HaloGeneral(object):
 
         # get command ID then check until command finishes
         command_id = response["id"]
-        server_obj = self.get_server_group_obj()
+        server_obj = self.get_server_obj()
         response = cloudpassage.Server.command_details(server_obj,
                                                        server_id, command_id)
 
