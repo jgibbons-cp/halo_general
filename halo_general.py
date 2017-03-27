@@ -694,20 +694,23 @@ class HaloGeneral(object):
         with open(lids_policy_file_path) as json_file:
             json_data = json.load(json_file)
 
-        # if the SDK is used - there appears to be a defect in the Policy.py
-        # in update I had to change the method signature and comment out a
-        # line to get it to work - looking into it.  Add rest call too
-        # until sorted so nobody has to change SDK code
-        if isinstance(object, cloudpassage.LidsPolicy):
-            lids_policy_object = object
-            lids_policy_object.update(lids_policy_id,
-                                      json_data)
-        elif isinstance(object, HttpHelper):
-            http_helper_object = object
-            endpoint_url = "/v1/lids_policies/%s" % lids_policy_id
+        try:
+            # if the SDK is used - there appears to be a defect in the Policy.py
+            # in update I had to change the method signature and comment out a
+            # line to get it to work - looking into it.  Add rest call too
+            # until sorted so nobody has to change SDK code
+            if isinstance(object, cloudpassage.LidsPolicy):
+                lids_policy_object = object
+                lids_policy_object.update(lids_policy_id,
+                                          json_data)
+            elif isinstance(object, cloudpassage.HttpHelper):
+                http_helper_object = object
+                endpoint_url = "/v1/lids_policies/%s" % lids_policy_id
 
-            http_helper_object.put(endpoint_url, json_data)
-
+                http_helper_object.put(endpoint_url, json_data)
+        except cloudpassage.exceptions.CloudPassageValidation as e:
+            print "Validation exception - check the json in the update call."\
+            "\n\n%s" % e
         return
 
     ##
