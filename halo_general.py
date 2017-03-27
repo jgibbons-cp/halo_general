@@ -677,23 +677,36 @@ class HaloGeneral(object):
 
     ##
     #
-    #   Update a LIDS policy
+    #   Update a LIDS policy using the SDK method or HttpHelper with REST
     #
     #       Parameters:
     #           self (object) - Halo General object
     #           lids_policy_obj (object) - LIDS policy object
+    #           http_helper_obj (object) - HTTP Helper object
     #           lids_policy_id (str) - LIDS policy ID
     #           lids_policy_file_path (str) - LIDS policy file path
     #
     ##
 
-    def update_lids_policy(self, lids_policy_obj, lids_policy_id,
+    def update_lids_policy(self, object, lids_policy_id,
                            lids_policy_file_path):
 
         with open(lids_policy_file_path) as json_file:
             json_data = json.load(json_file)
 
-        lids_policy_obj.update(lids_policy_id, json_data)
+        # if the SDK is used - there appears to be a defect in the Policy.py
+        # in update I had to change the method signature and comment out a
+        # line to get it to work - looking into it.  Add rest call too
+        # until sorted so nobody has to change SDK code
+        if isinstance(object, cloudpassage.LidsPolicy):
+            lids_policy_object = object
+            lids_policy_object.update(lids_policy_id,
+                                      json_data)
+        elif isinstance(object, HttpHelper):
+            http_helper_object = object
+            endpoint_url = "/v1/lids_policies/%s" % lids_policy_id
+
+            http_helper_object.put(endpoint_url, json_data)
 
         return
 
