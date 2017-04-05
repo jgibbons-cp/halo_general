@@ -626,7 +626,6 @@ class HaloGeneral(object):
 
         return server_id
 
-
     ########################
     #
     #   Scan related methods
