@@ -68,6 +68,50 @@ class HaloGeneral(object):
 
     ##
     #
+    #   Assign a server to a group
+    #
+    #   Parameters:
+    #
+    #       Halo General object (object)
+    #       server_id (str) - server id
+    #       group_id (str) - group id
+    #
+    #   Return:
+    #
+    #       True of exception
+    #
+    ##
+
+    def assign_server_to_group(self, server_obj, server_id, group_id):
+        ret_val = None
+
+        ret_val = server_obj.assign_group(server_id, group_id)
+
+        return ret_val
+
+    ##
+    #
+    #   Describe a server
+    #
+    #   Parameters:
+    #
+    #       Halo General object (object)
+    #       server_obj (object) - server object
+    #       server_id (str) - server ID
+    #
+    #   Return:
+    #
+    #       description (dict) - detailed description of server
+    #
+    ##
+
+    def describe_server(self, server_obj, server_id):
+        description = server_obj.describe(server_id)
+
+        return description
+
+    ##
+    #
     #   List all servers
     #
     #   Parameters:
@@ -80,8 +124,8 @@ class HaloGeneral(object):
     #
     ##
 
-    def list_all_servers(self):
-        list_of_servers = self.server_obj.list_all()
+    def list_all_servers(self, server_obj):
+        list_of_servers = server_obj.list_all()
 
         return list_of_servers
 
@@ -109,6 +153,73 @@ class HaloGeneral(object):
         server_group_obj = cloudpassage.ServerGroup(self.session)
 
         return server_group_obj
+
+    ###
+    #    Create a server group
+    #
+    #    Parameters:
+    #
+    #       self - class object
+    #       server_group_obj - object of server group class
+    #       group_name (str) - name of server group
+    #
+    #    Return:
+    #       list of server groups (list)
+    #
+    ###
+
+    def create_server_group(self, server_group_obj, group_name):
+        server_group_id = None
+
+        try:
+            server_group_id = server_group_obj.create(group_name)
+        except cloudpassage.CloudPassageValidation as exception:
+            print "Note exception. Server Group not created. %s" % exception
+
+            # string to use in unit tests
+            server_group_id = "CloudPassageValidationException"
+
+        return server_group_id
+
+    ###
+    #    Delete a server group
+    #
+    #    Parameters:
+    #
+    #       self - class object
+    #       server_group_obj - object of server group class
+    #       force (bool) - True to move servers to root
+    #
+    #    Return:
+    #       None or exception
+    #
+    ###
+    def delete_server_group(self, server_group_obj, server_group_id,
+                            force=False):
+
+        if force is True:
+            server_group_obj.delete(server_group_id, force=True)
+        else:
+            server_group_obj.delete(server_group_id)
+
+    ###
+    #    Describe a server group in detail
+    #
+    #    Parameters:
+    #
+    #       self - class object
+    #       server_group_obj - object of server group class
+    #       group_detail (str) - name of server group
+    #
+    #    Return:
+    #       response (dict)
+    #
+    ###
+
+    def describe_halo_server_group(self, server_group_obj, group_id):
+        group_detail = server_group_obj.describe(group_id)
+
+        return group_detail
 
     ###
     #    List all server groups
@@ -168,7 +279,7 @@ class HaloGeneral(object):
         server_group_id = None
 
         for server_group in server_groups:
-            if server_group["tag"] == server_group_name:
+            if server_group["name"] == server_group_name:
                 server_group_id = server_group["id"]
                 break
 
@@ -499,12 +610,12 @@ class HaloGeneral(object):
     #
     ##
 
-    def get_server_id_for_ip(self, http_helper_obj, baseline_host_ip):
+    def get_server_id_for_ip(self, http_helper_obj, host_ip):
         FIRST_SERVER = 0
 
         # endpoint url for servers API
         endpoint_url = '/v1/servers?connecting_ip_address=%s'\
-                       % baseline_host_ip
+                       % host_ip
 
         response = http_helper_obj.get(endpoint_url)
 
