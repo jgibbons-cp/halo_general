@@ -612,6 +612,8 @@ class HaloGeneral(object):
 
     def get_server_id_for_ip(self, http_helper_obj, host_ip):
         FIRST_SERVER = 0
+        server_id = None
+        NO_SERVERS = 0
 
         # endpoint url for servers API
         endpoint_url = '/v1/servers?connecting_ip_address=%s'\
@@ -619,7 +621,11 @@ class HaloGeneral(object):
 
         response = http_helper_obj.get(endpoint_url)
 
-        return response["servers"][FIRST_SERVER]["id"]
+        if response["count"] != NO_SERVERS:
+            server_id = response["servers"][FIRST_SERVER]["id"]
+
+        return server_id
+
 
     ########################
     #
