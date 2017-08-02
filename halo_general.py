@@ -1,6 +1,8 @@
+import datetime
+from datetime import timedelta
+import json
 import sys
 import time
-import json
 import cloudpassage
 
 
@@ -57,12 +59,31 @@ class HaloGeneral(object):
     #
     #   Return:
     #
-    #       list_of_servers (list) - returns a list of servers
+    #       server_obj (object)
     #
     ##
 
     def get_server_obj(self):
         server_obj = cloudpassage.Server(self.session)
+
+        return server_obj
+
+    ##
+    #
+    #   Get a Server object
+    #
+    #   Parameters:
+    #
+    #       Halo General object (object)
+    #
+    #   Return:
+    #
+    #       servers (list)
+    #
+    ##
+
+    def list_all_servers(self, server_obj):
+        servers = server_obj.list_all()
 
         return server_obj
 
@@ -83,8 +104,10 @@ class HaloGeneral(object):
     ##
 
     def assign_server_to_group(self, server_obj, server_id, group_id):
+        sleep_val = 0
         ret_val = None
 
+        time.sleep(sleep_val)
         ret_val = server_obj.assign_group(server_id, group_id)
 
         return ret_val
@@ -106,7 +129,10 @@ class HaloGeneral(object):
     ##
 
     def describe_server(self, server_obj, server_id):
-        description = server_obj.describe(server_id)
+        try:
+            description = server_obj.describe(server_id)
+        except cloudpassage.CloudPassageResourceExistence:
+            description = []
 
         return description
 
@@ -164,19 +190,14 @@ class HaloGeneral(object):
     #       group_name (str) - name of server group
     #
     #    Return:
-    #       list of server groups (list)
+    #       server_group_id (str) - Server Group ID or Exception string
     #
     ###
 
     def create_server_group(self, server_group_obj, group_name):
-        server_group_id = None
-
         try:
             server_group_id = server_group_obj.create(group_name)
         except cloudpassage.CloudPassageValidation as exception:
-            print "Note exception. Server Group not created. %s" % exception
-
-            # string to use in unit tests
             server_group_id = "CloudPassageValidationException"
 
         return server_group_id
@@ -275,7 +296,9 @@ class HaloGeneral(object):
 
     def get_server_group_id_by_name(self, server_group_obj,
                                     server_group_name):
+
         server_groups = self.list_all_server_groups(server_group_obj)
+
         server_group_id = None
 
         for server_group in server_groups:
@@ -357,7 +380,6 @@ class HaloGeneral(object):
     #   Parameters:
     #       self (object) Halo General object
     #       server_group_obj (object) - server group object
-    #       policy_key (str) - key to tell API the type of policy
     #       policy_id (str) - the policy id
     #       server_group_id (str) - server group id
     #
@@ -368,6 +390,142 @@ class HaloGeneral(object):
         policy_ids = [policy_id]
 
         server_group_obj.update(server_group_id, lids_policy_ids=policy_ids)
+
+        return
+
+    ##
+    #
+    #   Update a server group with a new CSM policy
+    #
+    #   Parameters:
+    #       self (object) Halo General object
+    #       csm_group_obj (object) - server group object
+    #       policy_id (str) - the policy id
+    #       server_group_id (str) - server group id
+    #
+    ##
+
+    def update_server_group_csm_policy_ids(self, server_group_obj,
+                                           policy_id, server_group_id):
+        ret_val = None
+        delay = 0
+        policy_ids = [policy_id]
+
+        ret_val = server_group_obj.update(server_group_id,
+                                          policy_ids=policy_ids)
+        time.sleep(delay)
+
+        return ret_val
+
+    ###################
+    #
+    #   Configuration policy related methods
+    #
+    ###################
+
+    ##
+    #
+    #   Get a configuration policy object
+    #
+    #   Parameters:
+    #
+    #       Halo General object (object)
+    #
+    #   Return:
+    #
+    #       Configuration Policy Object (object)
+    #
+    ##
+
+    def get_configuration_policy_obj(self):
+        configuration_policy_obj = cloudpassage.ConfigurationPolicy(self.session)
+
+        return configuration_policy_obj
+
+    ##
+    #
+    #   Create a CSM policy
+    #
+    #   Parameters:
+    #
+    #       self (object) - Halo General object
+    #       csm_policy_obj (object) - CSM policy object
+    #       csm_policy_file_path (str) - CSM policy ID
+    #
+    #   Return:
+    #       response (dict) - detailed configuration information of policy
+    #
+    ##
+
+    def create_csm_policy(self, csm_policy_obj, csm_policy_body):
+        try:
+            csm_policy_id = csm_policy_obj.create(csm_policy_body)
+        except cloudpassage.CloudPassageValidation as error:
+            csm_policy_id = "CloudPassageValidationException"
+
+        return csm_policy_id
+
+    ##
+    #
+    #   Describe a CSM policy
+    #
+    #   Parameters:
+    #
+    #       self (object) - Halo General object
+    #       csm_policy_obj (object) - CSM policy object
+    #       csm_policy_id (str) - CSM policy ID
+    #
+    #   Return:
+    #       response (dict) - detailed information of policy
+    #
+    ##
+
+    def describe_csm_policy(self, csm_policy_obj, csm_policy_id):
+
+        csm_policy_detail = csm_policy_obj.describe(csm_policy_id)
+
+        return csm_policy_detail
+
+    ##
+    #
+    #   List all CSM policies
+    #
+    #   Parameters:
+    #
+    #       self (object) - Halo General object
+    #       csm_policy_obj (object) - CSM policy object
+    #
+    #   Return:
+    #       csm_policies (list)
+    #
+    ##
+
+    def list_all_csm_polices(self, csm_policy_obj):
+        csm_policies = csm_policy_obj.list_all()
+
+        return csm_policies
+
+    ##
+    #
+    #   Delete a CSM policy
+    #
+    #   Parameters:
+    #
+    #       self (object) - Halo General object
+    #       csm_policy_obj (object) - CSM policy object
+    #       csm_policy_id (str) - CSM policy ID
+    #
+    #   Return:
+    #       void
+    #
+    ##
+
+    def delete_csm_policy(self, csm_policy_obj, csm_policy_id):
+        try:
+            ret_val = csm_policy_obj.delete(csm_policy_id)
+        except cloudpassage.CloudPassageValidation as error:
+            print "%s - it appears there may be a workflow issue..."\
+                  % error
 
         return
 
@@ -398,7 +556,7 @@ class HaloGeneral(object):
 
     ##
     #
-    #   Get the details of a FIM policy
+    #   Create a FIM policy
     #
     #   Parameters:
     #
@@ -596,6 +754,29 @@ class HaloGeneral(object):
 
     ##
     #
+    #   Get CVE details
+    #
+    #   Parameters:
+    #
+    #       self (object) - HaloGeneral object
+    #       CVE-ID (str)
+    #
+    #   Return:
+    #
+    #       cve_details (dict)
+    #
+    ##
+
+    def get_cve_details(self, http_helper_obj, cve_id):
+
+        endpoint_url = "/v1/cve_details/%s" % cve_id
+
+        cve_details = http_helper_obj.get(endpoint_url)
+
+        return cve_details
+
+    ##
+    #
     #   Get a server ID for an IP
     #
     #   Parameters:
@@ -733,6 +914,34 @@ class HaloGeneral(object):
 
         return response
 
+    ###
+    #
+    #    Get last historical scan before a date
+    #
+    #    Parameters:
+    #
+    #       self (object) - HaloGeneral object
+    #       scan_obj (object) - Scan object
+    #       server_id (str) - Server ID
+    #       module (str) - Type of scan
+    #
+    #    Return:
+    #       response (dict) - dictionary with details of scan
+    #
+    ###
+
+    def get_last_scan_before_date(self, scan_obj, server_id, module, days_ago):
+        FIRST = 0
+
+        status = ["completed_clean", "completed_with_errors"]
+        today = datetime.date.today()
+        until = today - datetime.timedelta(days=days_ago)
+
+        response = scan_obj.scan_history(server_id=server_id, module=module,
+                                         status=status, until=until)
+
+        return response[FIRST]
+
     #########################
     #
     #   LIDS policy related methods
@@ -846,7 +1055,31 @@ class HaloGeneral(object):
 
         return response
 
-        # checks the status of an API command
+    def get_event_obj(self):
+        event_obj = cloudpassage.Event(self.session)
+
+        return event_obj
+
+    def get_past_days_retired_servers(self, event_obj):
+
+        date_format = "%Y-%m-%d"
+        yesterday_date_format = "%Y-%m-%dT23:59:59.999Z"
+        today_date_format = "%Y-%m-%dT23:59:59.998Z"
+        delta = 1
+        server_retired = "server_retired"
+        max_pages = 300
+
+        today = datetime.datetime.today().strftime(today_date_format)
+        yesterday = datetime.datetime.today() - timedelta(days=delta)
+        yesterday = yesterday.strftime(yesterday_date_format)
+
+        print yesterday
+        print today
+
+        retired_servers = event_obj.list_all(pages=max_pages, since=yesterday,
+                                             until=today, type=server_retired)
+
+        return retired_servers
 
     ##
     #
