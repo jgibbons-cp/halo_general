@@ -940,7 +940,7 @@ class HaloGeneral(object):
         response = scan_obj.scan_history(server_id=server_id, module=module,
                                          status=status, until=until)
 
-        return response[FIRST]
+        return response
 
     #########################
     #
